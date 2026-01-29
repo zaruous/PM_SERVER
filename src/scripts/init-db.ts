@@ -7,11 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const INITIAL_POSITION_LEVELS = [
-  { name: 'Junior', sort_order: 1 },
-  { name: 'Senior', sort_order: 2 },
-  { name: 'Lead', sort_order: 3 },
-  { name: 'Manager', sort_order: 4 },
-  { name: 'Director', sort_order: 5 },
+    { id:1, name: '프로', sort_order: 5 },
 ];
 
 const INITIAL_PROJECTS = [
@@ -22,11 +18,11 @@ const INITIAL_PROJECTS = [
 ];
 
 const INITIAL_MEMBERS = [
-  { id: 'm1', name: 'Kim Min-su', joinDate:'2026-01-27', position: 'Senior', skills: ['React', 'Node', 'AWS'] , note:''},
-  { id: 'm2', name: 'Lee Ji-young', joinDate:'2026-01-27', position: 'Lead', skills: ['Java', 'Spring', 'Architecture'], note:'' },
-  { id: 'm3', name: 'Park Jun-ho', joinDate:'2026-01-27',position: 'Senior', skills: ['Python', 'AI', 'TensorFlow'] , note:''},
-  { id: 'm4', name: 'Choi Su-jin', joinDate:'2026-01-27', position: 'Junior', skills: ['UI/UX', 'Figma', 'CSS'] , note:''},
-  { id: 'm5', name: 'Jung Tae-woo', joinDate:'2026-01-27', position: 'Senior', skills: ['DevOps', 'Docker', 'K8s'], note:'' },
+  { id: 'm1', name: 'Kim Min-su', joinDate:'2026-01-27', position: '프로', skills: ['React', 'Node', 'AWS'] , note:''},
+  { id: 'm2', name: 'Lee Ji-young', joinDate:'2026-01-27', position: '프로', skills: ['Java', 'Spring', 'Architecture'], note:'' },
+  { id: 'm3', name: 'Park Jun-ho', joinDate:'2026-01-27',position: '프로', skills: ['Python', 'AI', 'TensorFlow'] , note:''},
+  { id: 'm4', name: 'Choi Su-jin', joinDate:'2026-01-27', position: '프로', skills: ['UI/UX', 'Figma', 'CSS'] , note:''},
+  { id: 'm5', name: 'Jung Tae-woo', joinDate:'2026-01-27', position: '프로', skills: ['DevOps', 'Docker', 'K8s'], note:'' },
 ];
 
 const INITIAL_ASSIGNMENTS = [

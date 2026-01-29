@@ -20,7 +20,10 @@
   - `dotenv`: 환경 변수 관리
 
 ## 3. 설치 및 실행 (Installation and Execution)
-
+```
+    npm install
+```
+    
 ### 3.1. 환경 변수 설정 (Environment Variables)
 
 프로젝트 루트 디렉터리에 `.env` 파일을 생성하고 아래와 같이 데이터베이스 연결 정보 및 서버 포트를 설정해야 합니다.
