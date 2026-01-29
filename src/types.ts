@@ -28,9 +28,10 @@ export enum Role {
     name: string;
     position: string;
     skills: string[];
-    employee_number?: string;
     join_date?: string;
     note?: string;
+    deleteYn?: number;
+    employee_number : string;
   }
   
   export interface Assignment {

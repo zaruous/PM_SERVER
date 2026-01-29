@@ -28,8 +28,12 @@ export const memberController = {
     try {
       const newMember = await memberModel.create(req.body);
       res.status(201).json(newMember);
-    } catch (error) {
-      res.status(500).json({ message: 'Error creating member', error });
+    } catch (error: any) {
+      if (error?.message?.includes('already exists')) {
+        res.status(409).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: 'Error creating member', error });
+      }
     }
   },
 

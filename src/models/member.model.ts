@@ -1,10 +1,9 @@
 import pool from '../database/db';
 import { Member } from '../types';
-import { generateId } from '../utils/helpers';
 
 export const memberModel = {
   async findAll(): Promise<Member[]> {
-    const { rows: members } = await pool.query('SELECT * FROM members');
+    const { rows: members } = await pool.query('SELECT * FROM members WHERE deleteYn = 0');
 
     for (const member of members) {
       const { rows: skills } = await pool.query('SELECT skill_name FROM member_skills WHERE member_id = $1', [member.id]);
@@ -14,7 +13,7 @@ export const memberModel = {
   },
 
   async findById(id: string): Promise<Member | null> {
-    const { rows } = await pool.query('SELECT * FROM members WHERE id = $1', [id]);
+    const { rows } = await pool.query('SELECT * FROM members WHERE id = $1 AND deleteYn = 0', [id]);
     if (rows.length === 0) {
       return null;
     }
@@ -24,33 +23,71 @@ export const memberModel = {
     return member;
   },
 
-  async create(member: Omit<Member, 'id' | 'skills'> & { skills: string[] }): Promise<Member> {
-    const newMember: Member = { id: generateId(), ...member };
-    const { id, name, position, employee_number, join_date, note, skills } = newMember;
-
+  async create(member: Member): Promise<Member> {
+    const { id, name, position, join_date, note, skills, employee_number } = member;
     const client = await pool.connect();
+
     try {
-        await client.query('BEGIN');
-        await client.query(
-            'INSERT INTO members (id, name, position, employee_number, join_date, note) VALUES ($1, $2, $3, $4, $5, $6)',
-            [id, name, position, employee_number, join_date, note]
-        );
-        if (skills && skills.length > 0) {
-            const skillValues = skills.map((skill, index) => `($1, $${index + 2})`).join(',');
-            const skillParams = [id, ...skills];
-            await client.query(`INSERT INTO member_skills (member_id, skill_name) VALUES ${skillValues}`, skillParams);
+      await client.query('BEGIN');
+      await client.query(
+          'INSERT INTO members (id, name, position, join_date, note, employee_number) VALUES ($1, $2, $3, $4, $5, $6)',
+          [employee_number, name, position, join_date, note, employee_number]
+      );
+
+      if (skills && skills.length > 0) {
+          const skillValues = skills.map((skill, index) => `($1, $${index + 2})`).join(',');
+          const skillParams = [id, ...skills];
+          await client.query(`INSERT INTO member_skills (member_id, skill_name) VALUES ${skillValues}`, skillParams);
+      }
+      
+      await client.query('COMMIT');
+      return { ...member, deleteYn: 0 }; // Return the created member
+    } catch (error: any) {
+      await client.query('ROLLBACK');
+
+      // Check for unique violation error (code '23505' in PostgreSQL)
+      if (error.code === '23505') {
+        const { rows } = await client.query('SELECT * FROM members WHERE id = $1', [id]);
+        const existingMember = rows[0];
+
+        if (existingMember && existingMember.deleteyn === 1) {
+          // The member is soft-deleted, so revive them
+          try {
+            await client.query('BEGIN');
+            await client.query(
+              'UPDATE members SET name = $1, position = $2, join_date = $3, note = $4, deleteYn = 0, updated_at = NOW() WHERE id = $5',
+              [name, position, join_date, note, id]
+            );
+
+            // Update skills
+            await client.query('DELETE FROM member_skills WHERE member_id = $1', [id]);
+            if (skills && skills.length > 0) {
+              const skillValues = skills.map((skill, index) => `($1, $${index + 2})`).join(',');
+              const skillParams = [id, ...skills];
+              await client.query(`INSERT INTO member_skills (member_id, skill_name) VALUES ${skillValues}`, skillParams);
+            }
+
+            await client.query('COMMIT');
+            const revivedMember = await this.findById(id);
+            if (!revivedMember) throw new Error('Failed to revive member.');
+            return revivedMember;
+          } catch (reviveError) {
+            await client.query('ROLLBACK');
+            throw reviveError;
+          }
+        } else {
+          // Active member exists, it's a true conflict
+          throw new Error(`Member with ID ${id} already exists.`);
         }
-        await client.query('COMMIT');
-        return newMember;
-    } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
+      }
+      // Re-throw other errors
+      throw error;
     } finally {
-        client.release();
+      client.release();
     }
   },
 
-  async update(id: string, member: Partial<Omit<Member, 'skills'>> & { skills?: string[] }): Promise<Member | null> {
+  async update(id: string, member: Partial<Omit<Member, 'skills' | 'id'>> & { skills?: string[] }): Promise<Member | null> {
     const { skills, ...memberData } = member;
 
     const client = await pool.connect();
@@ -92,6 +129,6 @@ export const memberModel = {
   },
 
   async remove(id: string): Promise<void> {
-    await pool.query('DELETE FROM members WHERE id = $1', [id]);
+    await pool.query('UPDATE members SET deleteYn = 1 WHERE id = $1', [id]);
   }
 };

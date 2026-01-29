@@ -49,12 +49,12 @@ EXECUTE FUNCTION update_updated_at_column();
 
 -- 3. Members Table
 CREATE TABLE members (
-    id              VARCHAR(50) PRIMARY KEY,
+    id              VARCHAR(50) PRIMARY KEY, -- Employee Number
     name            VARCHAR(100) NOT NULL,
     position        VARCHAR(50),
-    employee_number VARCHAR(50),
     join_date       DATE,
     note            TEXT,
+    deleteYn        SMALLINT DEFAULT 0,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

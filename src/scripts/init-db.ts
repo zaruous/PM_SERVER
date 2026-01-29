@@ -18,17 +18,17 @@ const INITIAL_PROJECTS = [
 ];
 
 const INITIAL_MEMBERS = [
-  { id: 'm1', name: 'Kim Min-su', joinDate:'2026-01-27', position: '프로', skills: ['React', 'Node', 'AWS'] , note:''},
-  { id: 'm2', name: 'Lee Ji-young', joinDate:'2026-01-27', position: '프로', skills: ['Java', 'Spring', 'Architecture'], note:'' },
-  { id: 'm3', name: 'Park Jun-ho', joinDate:'2026-01-27',position: '프로', skills: ['Python', 'AI', 'TensorFlow'] , note:''},
-  { id: 'm4', name: 'Choi Su-jin', joinDate:'2026-01-27', position: '프로', skills: ['UI/UX', 'Figma', 'CSS'] , note:''},
-  { id: 'm5', name: 'Jung Tae-woo', joinDate:'2026-01-27', position: '프로', skills: ['DevOps', 'Docker', 'K8s'], note:'' },
+  { id: 'E26001', name: 'Kim Min-su', joinDate:'2026-01-27', position: '프로', skills: ['React', 'Node', 'AWS'] , note:''},
+  { id: 'E26002', name: 'Lee Ji-young', joinDate:'2026-01-27', position: '프로', skills: ['Java', 'Spring', 'Architecture'], note:'' },
+  { id: 'E26003', name: 'Park Jun-ho', joinDate:'2026-01-27',position: '프로', skills: ['Python', 'AI', 'TensorFlow'] , note:''},
+  { id: 'E26004', name: 'Choi Su-jin', joinDate:'2026-01-27', position: '프로', skills: ['UI/UX', 'Figma', 'CSS'] , note:''},
+  { id: 'E26005', name: 'Jung Tae-woo', joinDate:'2026-01-27', position: '프로', skills: ['DevOps', 'Docker', 'K8s'], note:'' },
 ];
 
 const INITIAL_ASSIGNMENTS = [
-  { id: 'a1', projectId: 'p1', memberId: 'm1', memberName: 'Kim Min-su', role: 'PM', startDate: '2026-01-01', endDate: '2026-12-31', inputRatio: 1.0, monthlyWeights: { "2026-01": 1, "2026-02": 1, "2026-03": 1, "2026-04": 1, "2026-05": 1, "2026-06": 1, "2026-07": 1, "2026-08": 1, "2026-09": 1, "2026-10": 1, "2026-11": 1, "2026-12": 1 } },
-  { id: 'a2', projectId: 'p1', memberId: 'm2', memberName: 'Lee Ji-young', role: 'PL', startDate: '2026-01-01', endDate: '2026-12-31', inputRatio: 1.0, monthlyWeights: { "2026-01": 1, "2026-02": 1, "2026-03": 1, "2026-04": 1, "2026-05": 1, "2026-06": 1, "2026-07": 1, "2026-08": 1, "2026-09": 1, "2026-10": 1, "2026-11": 1, "2026-12": 1 } },
-  { id: 'a3', projectId: 'p3', memberId: 'm5', memberName: 'Jung Tae-woo', role: 'TA', startDate: '2026-02-01', endDate: '2026-11-30', inputRatio: 0.5, monthlyWeights: { "2026-02": 0.5, "2026-03": 0.5, "2026-04": 0.5, "2026-05": 0.5, "2026-06": 0.5, "2026-07": 0.5, "2026-08": 0.5, "2026-09": 0.5, "2026-10": 0.5, "2026-11": 0.5 } }
+  { id: 'a1', projectId: 'p1', memberId: 'E26001', memberName: 'Kim Min-su', role: 'PM', startDate: '2026-01-01', endDate: '2026-12-31', inputRatio: 1.0, monthlyWeights: { "2026-01": 1, "2026-02": 1, "2026-03": 1, "2026-04": 1, "2026-05": 1, "2026-06": 1, "2026-07": 1, "2026-08": 1, "2026-09": 1, "2026-10": 1, "2026-11": 1, "2026-12": 1 } },
+  { id: 'a2', projectId: 'p1', memberId: 'E26002', memberName: 'Lee Ji-young', role: 'PL', startDate: '2026-01-01', endDate: '2026-12-31', inputRatio: 1.0, monthlyWeights: { "2026-01": 1, "2026-02": 1, "2026-03": 1, "2026-04": 1, "2026-05": 1, "2026-06": 1, "2026-07": 1, "2026-08": 1, "2026-09": 1, "2026-10": 1, "2026-11": 1, "2026-12": 1 } },
+  { id: 'a3', projectId: 'p3', memberId: 'E26005', memberName: 'Jung Tae-woo', role: 'TA', startDate: '2026-02-01', endDate: '2026-11-30', inputRatio: 0.5, monthlyWeights: { "2026-02": 0.5, "2026-03": 0.5, "2026-04": 0.5, "2026-05": 0.5, "2026-06": 0.5, "2026-07": 0.5, "2026-08": 0.5, "2026-09": 0.5, "2026-10": 0.5, "2026-11": 0.5 } }
 ];
 
 async function initializeDatabase() {
