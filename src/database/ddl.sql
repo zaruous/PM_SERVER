@@ -1,13 +1,33 @@
 /* ==========================================================================
-   PMO Suite - MariaDB DDL
+   PMO Suite - PostgreSQL DDL
    ========================================================================== */
 
-DROP TABLE IF EXISTS member_skills;
-DROP TABLE IF EXISTS assignments;
-DROP TABLE IF EXISTS projects;
-DROP TABLE IF EXISTS members;
+DROP TABLE IF EXISTS member_skills CASCADE;
+DROP TABLE IF EXISTS assignments CASCADE;
+DROP TABLE IF EXISTS projects CASCADE;
+DROP TABLE IF EXISTS members CASCADE;
+DROP TABLE IF EXISTS position_levels CASCADE;
 
--- 1. Projects Table
+
+-- Function to update the updated_at column
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+
+-- 1. Position Levels Table
+CREATE TABLE position_levels (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    sort_order INT NOT NULL
+);
+
+
+-- 2. Projects Table
 CREATE TABLE projects (
     id              VARCHAR(50) PRIMARY KEY,
     name            VARCHAR(200) NOT NULL,
@@ -18,11 +38,16 @@ CREATE TABLE projects (
     start_date      DATE,
     end_date        DATE,
     status          VARCHAR(20) DEFAULT 'Planning' CHECK (status IN ('Planning', 'Active', 'Completed', 'On Hold')),
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Members Table
+CREATE TRIGGER update_projects_updated_at
+BEFORE UPDATE ON projects
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- 3. Members Table
 CREATE TABLE members (
     id              VARCHAR(50) PRIMARY KEY,
     name            VARCHAR(100) NOT NULL,
@@ -30,11 +55,16 @@ CREATE TABLE members (
     employee_number VARCHAR(50),
     join_date       DATE,
     note            TEXT,
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Member Skills Table
+CREATE TRIGGER update_members_updated_at
+BEFORE UPDATE ON members
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- 4. Member Skills Table
 CREATE TABLE member_skills (
     member_id       VARCHAR(50) NOT NULL,
     skill_name      VARCHAR(100) NOT NULL,
@@ -42,7 +72,7 @@ CREATE TABLE member_skills (
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
 );
 
--- 4. Assignments Table
+-- 5. Assignments Table
 CREATE TABLE assignments (
     id              VARCHAR(50) PRIMARY KEY,
     project_id      VARCHAR(50) NOT NULL,
@@ -53,8 +83,14 @@ CREATE TABLE assignments (
     end_date        DATE NOT NULL,
     input_ratio     DECIMAL(3, 2) DEFAULT 1.0,
     monthly_weights JSON,
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
 );
+
+
+CREATE TRIGGER update_assignments_updated_at
+BEFORE UPDATE ON assignments
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();

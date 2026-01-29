@@ -4,82 +4,94 @@ import { generateId } from '../utils/helpers';
 
 export const memberModel = {
   async findAll(): Promise<Member[]> {
-    const [members] = await pool.query('SELECT * FROM members');
-    const membersArray = members as Member[];
+    const { rows: members } = await pool.query('SELECT * FROM members');
 
-    for (const member of membersArray) {
-      const [skills] = await pool.query('SELECT skill_name FROM member_skills WHERE member_id = ?', [member.id]);
-      member.skills = (skills as any[]).map(s => s.skill_name);
+    for (const member of members) {
+      const { rows: skills } = await pool.query('SELECT skill_name FROM member_skills WHERE member_id = $1', [member.id]);
+      member.skills = skills.map(s => s.skill_name);
     }
-    return membersArray;
+    return members;
   },
 
   async findById(id: string): Promise<Member | null> {
-    const [rows] = await pool.query('SELECT * FROM members WHERE id = ?', [id]);
-    const members = rows as Member[];
-    if (members.length === 0) {
+    const { rows } = await pool.query('SELECT * FROM members WHERE id = $1', [id]);
+    if (rows.length === 0) {
       return null;
     }
-    const member = members[0];
-    const [skills] = await pool.query('SELECT skill_name FROM member_skills WHERE member_id = ?', [member.id]);
-    member.skills = (skills as any[]).map(s => s.skill_name);
+    const member = rows[0];
+    const { rows: skills } = await pool.query('SELECT skill_name FROM member_skills WHERE member_id = $1', [member.id]);
+    member.skills = skills.map(s => s.skill_name);
     return member;
   },
 
   async create(member: Omit<Member, 'id' | 'skills'> & { skills: string[] }): Promise<Member> {
-    const newMember = { id: generateId(), ...member };
-    
-    const { skills, ...memberData } = newMember;
+    const newMember: Member = { id: generateId(), ...member };
+    const { id, name, position, employee_number, join_date, note, skills } = newMember;
 
-    const connection = await pool.getConnection();
+    const client = await pool.connect();
     try {
-        await connection.beginTransaction();
-        await connection.query('INSERT INTO members SET ?', memberData);
+        await client.query('BEGIN');
+        await client.query(
+            'INSERT INTO members (id, name, position, employee_number, join_date, note) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, name, position, employee_number, join_date, note]
+        );
         if (skills && skills.length > 0) {
-            const skillValues = skills.map(skill => [newMember.id, skill]);
-            await connection.query('INSERT INTO member_skills (member_id, skill_name) VALUES ?', [skillValues]);
+            const skillValues = skills.map((skill, index) => `($1, $${index + 2})`).join(',');
+            const skillParams = [id, ...skills];
+            await client.query(`INSERT INTO member_skills (member_id, skill_name) VALUES ${skillValues}`, skillParams);
         }
-        await connection.commit();
-        return { ...newMember, skills };
+        await client.query('COMMIT');
+        return newMember;
     } catch (error) {
-        await connection.rollback();
+        await client.query('ROLLBACK');
         throw error;
     } finally {
-        connection.release();
+        client.release();
     }
   },
 
   async update(id: string, member: Partial<Omit<Member, 'skills'>> & { skills?: string[] }): Promise<Member | null> {
     const { skills, ...memberData } = member;
-    
-    const connection = await pool.getConnection();
+
+    const client = await pool.connect();
     try {
-        await connection.beginTransaction();
+        await client.query('BEGIN');
 
         if (Object.keys(memberData).length > 0) {
-            await connection.query('UPDATE members SET ? WHERE id = ?', [memberData, id]);
+            const queryParts: string[] = [];
+            const values: any[] = [];
+            let valueCounter = 1;
+
+            for (const [key, value] of Object.entries(memberData)) {
+                queryParts.push(`${key} = $${valueCounter}`);
+                values.push(value);
+                valueCounter++;
+            }
+            const queryString = `UPDATE members SET ${queryParts.join(', ')} WHERE id = $${valueCounter}`;
+            values.push(id);
+            await client.query(queryString, values);
         }
 
         if (skills) {
-            await connection.query('DELETE FROM member_skills WHERE member_id = ?', [id]);
+            await client.query('DELETE FROM member_skills WHERE member_id = $1', [id]);
             if (skills.length > 0) {
-                const skillValues = skills.map(skill => [id, skill]);
-                await connection.query('INSERT INTO member_skills (member_id, skill_name) VALUES ?', [skillValues]);
+              const skillValues = skills.map((skill, index) => `($1, $${index + 2})`).join(',');
+              const skillParams = [id, ...skills];
+              await client.query(`INSERT INTO member_skills (member_id, skill_name) VALUES ${skillValues}`, skillParams);
             }
         }
         
-        await connection.commit();
+        await client.query('COMMIT');
         return this.findById(id);
     } catch (error) {
-        await connection.rollback();
+        await client.query('ROLLBACK');
         throw error;
     } finally {
-        connection.release();
+        client.release();
     }
   },
 
   async remove(id: string): Promise<void> {
-    // Deleting from members will cascade to member_skills
-    await pool.query('DELETE FROM members WHERE id = ?', [id]);
+    await pool.query('DELETE FROM members WHERE id = $1', [id]);
   }
 };

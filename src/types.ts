@@ -42,6 +42,6 @@ export enum Role {
     start_date: string;
     end_date: string;
     input_ratio: number;
-    monthly_weights: { [month: string]: number };
+    monthly_weights: number;
   }
   
